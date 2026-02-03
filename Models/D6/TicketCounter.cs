@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace MyApp.Models.D6
 {
     public class TicketCounter

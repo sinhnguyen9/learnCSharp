@@ -1,9 +1,15 @@
 namespace MyApp.Models
 {
-    public class Employee(string name, double baseSalary)
+    public class Employee
     {
-        public string Name { get; set; } = name;
-        public double BaseSalary { get; set; } = baseSalary;
+        public string Name { get; set; }
+        public double BaseSalary { get; set; }
+
+        public Employee(string name, double baseSalary)
+        {
+            Name = name;
+            BaseSalary = baseSalary;
+        }
 
         public double CalculateTax()
         {

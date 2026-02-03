@@ -679,7 +679,7 @@ foreach (var item in filterData)
 }
 */
 
-//*! D8
+//*! D9
 /*
 using System.Diagnostics;
 
@@ -715,40 +715,126 @@ Console.WriteLine($"Thoi gian chay 3 func async await: {stopWatch.ElapsedMillise
 */
 
 //*! D10
+/*
+using MyApp.Models.D10;
 
-// using MyApp.Models.D10;
+List<Task> tasks = new List<Task>();
+List<BankAccount> bankAccounts = [
+    new (10000)
+];
+for (int i = 0; i < 100; i++)
+{
+    int taskId = i; // Tạo biến cục bộ cho closure
+    tasks.Add(Task.Run(() => bankAccounts[0].WithDraw(100)));
+}
 
-// List<Task> tasks = new List<Task>();
-// List<BankAccount> bankAccounts = [
-//     new (10000)
-// ];
-// for (int i = 0; i < 100; i++)
-// {
-//     int taskId = i; // Tạo biến cục bộ cho closure
-//     tasks.Add(Task.Run(() => bankAccounts[0].WithDraw(100)));
-// }
+// Đợi tất cả 10 tasks hoàn thành
+await Task.WhenAll(tasks);
 
-// // Đợi tất cả 10 tasks hoàn thành
-// await Task.WhenAll(tasks);
+Console.WriteLine($"So du: {bankAccounts[0].GetBalance()}");
 
-// Console.WriteLine($"So du: {bankAccounts[0].GetBalance()}");
+int total = 0;
 
-// int total = 0;
+Parallel.For(0, 1000, i =>
+{
+    Interlocked.Increment(ref total);
+});
 
-// Parallel.For(0, 1000, i =>
-// {
-//     Interlocked.Increment(ref total);
-// });
+Console.WriteLine(total);
+*/
 
-// Console.WriteLine(total);
+/*
+using System.Diagnostics;
 
-// using System.Diagnostics;
+async Task A() => await Task.Delay(3000);
+async Task B() => await Task.Delay(2000);
+async Task C() => await Task.Delay(1000);
 
-// async Task A() => await Task.Delay(3000);
-// async Task B() => await Task.Delay(2000);
-// async Task C() => await Task.Delay(1000);
+var sc = Stopwatch.StartNew();
+await Task.WhenAll(Task.Run(A), Task.Run(B), Task.Run(C));
+sc.Stop();
+Console.WriteLine(sc.ElapsedMilliseconds);
+*/
 
-// var sc = Stopwatch.StartNew();
-// await Task.WhenAll(Task.Run(A), Task.Run(B), Task.Run(C));
-// sc.Stop();
-// Console.WriteLine(sc.ElapsedMilliseconds);
+
+//*! D11
+//CustomerService customerService = new CustomerService(new Logger(), new Repository());
+//customerService.GetInfo();
+
+//DIContainer.SetModule<ILogger, FileLogger>();
+
+using MyApp.Implement;
+using MyApp.Interface;
+
+DIContainer.SetModule<ILogger, ConsoleLogger>();
+DIContainer.SetModule<IRepository, Repository>();
+
+DIContainer.SetModule<CustomerService, CustomerService>();
+
+var customerService = DIContainer.GetModule<CustomerService>();
+customerService.GetInfo();
+
+public class DIContainer
+{
+    //Dictionary để chứa các interface và module tương ứng
+    private static readonly Dictionary<Type, object>
+               ResgisteredModules = new Dictionary<Type, object>();
+
+    //Hai hàm cơ bản, ở đây mình chuyển <T> thành 
+    //dạng Type trong C# để dễ viết code
+    public static void SetModule<TInterface, TModule>()
+    {
+        SetModule(typeof(TInterface), typeof(TModule));
+    }
+
+    public static T GetModule<T>()
+    {
+        return (T)GetModule(typeof(T));
+    }
+
+
+    private static void SetModule(Type interfaceType, Type moduleType)
+    {
+        //Kiểm tra module đã implement interface chưa
+        if (!interfaceType.IsAssignableFrom(moduleType))
+        {
+            throw new Exception("Wrong Module type");
+        }
+
+        //Tìm constructor đầu tiên
+        var firstConstructor = moduleType.GetConstructors()[0];
+        object module = null;
+        //Nếu như không có tham số
+        if (!firstConstructor.GetParameters().Any())
+        {
+            //Khởi tạo module
+            module = firstConstructor.Invoke(null); // new Repository(), new FileLogger()
+        }
+        else
+        {
+            //Lấy các tham số của constructor
+            var constructorParameters = firstConstructor.GetParameters(); //IRepository, ILogger
+
+            var moduleDependecies = new List<object>();
+            foreach (var parameter in constructorParameters)
+            {
+                var dependency = GetModule(parameter.ParameterType); //Lấy module tương ứng từ DIContainer
+                moduleDependecies.Add(dependency);
+            }
+
+            //Inject các dependency vào constructor của module
+            module = firstConstructor.Invoke(moduleDependecies.ToArray());
+        }
+        //Lưu trữ interface và module tương ứng
+        ResgisteredModules.Add(interfaceType, module);
+    }
+
+    private static object GetModule(Type interfaceType)
+    {
+        if (ResgisteredModules.ContainsKey(interfaceType))
+        {
+            return ResgisteredModules[interfaceType];
+        }
+        throw new Exception("Module not register");
+    }
+}

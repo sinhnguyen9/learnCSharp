@@ -1,3 +1,5 @@
+using System;
+
 namespace MyApp.Models.D6
 {
     public class Box<T>

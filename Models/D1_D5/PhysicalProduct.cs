@@ -1,4 +1,5 @@
 using MyApp.Extension;
+using System;
 
 namespace MyApp.Models.D1_D5
 {

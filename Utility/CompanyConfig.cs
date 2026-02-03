@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace MyApp.Utility
 {
     public static class CompanyConfig

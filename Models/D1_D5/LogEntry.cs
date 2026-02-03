@@ -1,3 +1,5 @@
+using System;
+
 public class LogEntry
 {
     public LogEnum Type { get; set; }
