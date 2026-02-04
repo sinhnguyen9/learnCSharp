@@ -5,10 +5,10 @@ namespace MyApp.Models.D6
 {
     public class TicketCounter
     {
-        private Queue<Ticket> _queue = new();
+        private Queue<D6Ticket> _queue = new();
         private Dictionary<int, string> _history = new();
 
-        public void CheckIn(Ticket t)
+        public void CheckIn(D6Ticket t)
         {
             _queue.Enqueue(t);
         }

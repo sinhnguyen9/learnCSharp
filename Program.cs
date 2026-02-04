@@ -758,20 +758,28 @@ Console.WriteLine(sc.ElapsedMilliseconds);
 
 
 //*! D11
+
 //CustomerService customerService = new CustomerService(new Logger(), new Repository());
 //customerService.GetInfo();
 
 //DIContainer.SetModule<ILogger, FileLogger>();
 
+using Microsoft.Extensions.DependencyInjection;
 using MyApp.Implement;
 using MyApp.Interface;
 
-DIContainer.SetModule<ILogger, ConsoleLogger>();
-DIContainer.SetModule<IRepository, Repository>();
+//DIContainer.SetModule<ILogger, ConsoleLogger>();
+//DIContainer.SetModule<IRepository, Repository>();
 
-DIContainer.SetModule<CustomerService, CustomerService>();
+//DIContainer.SetModule<CustomerService, CustomerService>();
 
-var customerService = DIContainer.GetModule<CustomerService>();
+//var customerService = DIContainer.GetModule<CustomerService>();
+var service = new ServiceCollection();
+service.AddTransient<ILogger, ConsoleLogger>();
+service.AddScoped<IRepository, Repository>();
+service.AddSingleton<CustomerService>();
+var serviceProvider = service.BuildServiceProvider();
+var customerService = serviceProvider.GetRequiredService<CustomerService>();
 customerService.GetInfo();
 
 public class DIContainer
@@ -838,3 +846,48 @@ public class DIContainer
         throw new Exception("Module not register");
     }
 }
+
+
+//*! D1_D11
+/*
+using Microsoft.Extensions.DependencyInjection;
+using MyApp.Interfaces.D1_11;
+using MyApp.Models.D1_11;
+using MyApp.Services;
+
+//IRepository<Ticket> _memoryRepository = new MemoryRepository();
+//INotificationService _emailNotification = new EmailNotificationService();
+//TicketManager _ticketManager = new TicketManager(_memoryRepository, _emailNotification);
+
+//var tasks = new List<Task>
+//{
+//    _ticketManager.CreateTicketAsync("Fix bug #123", PriorityEnum.High),
+//    _ticketManager.CreateTicketAsync("Implement feature XYZ", PriorityEnum.Medium),
+//    _ticketManager.CreateTicketAsync("Update documentation", PriorityEnum.Low),
+//    _ticketManager.CreateTicketAsync("Code review for PR #456", PriorityEnum.High),
+//    _ticketManager.CreateTicketAsync("Optimize database queries", PriorityEnum.Medium),
+//    _ticketManager.CreateTicketAsync("Design new UI mockups", PriorityEnum.Low)
+//};
+
+var service = new ServiceCollection();
+service.AddTransient<IRepository<Ticket>, MemoryRepository>();
+service.AddScoped<INotificationService, EmailNotificationService>();
+service.AddSingleton<TicketManager>();
+
+var serviceProvider = service.BuildServiceProvider();
+var scope = serviceProvider.CreateScope();
+var _ticketManager = scope.ServiceProvider.GetRequiredService<TicketManager>();
+var tasks = new List<Task>
+{
+    _ticketManager.CreateTicketAsync("Fix bug #123", PriorityEnum.High),
+    _ticketManager.CreateTicketAsync("Implement feature XYZ", PriorityEnum.Medium),
+    _ticketManager.CreateTicketAsync("Update documentation", PriorityEnum.Low),
+    _ticketManager.CreateTicketAsync("Code review for PR #456", PriorityEnum.High),
+    _ticketManager.CreateTicketAsync("Optimize database queries", PriorityEnum.Medium),
+    _ticketManager.CreateTicketAsync("Design new UI mockups", PriorityEnum.Low)
+};
+await Task.WhenAll(tasks);
+
+
+_ticketManager.ShowStatistics();  
+*/
